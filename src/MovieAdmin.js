@@ -65,6 +65,26 @@ function MovieAdmin() {
     };
 
 
+
+    const fetchEpisodes = () => {
+        axios.get(`http://localhost:8080/films/${movieDetails.id}/episodes`)
+            .then(response => {
+                if (response.data && Array.isArray(response.data)) {
+                    setMovieDetails(prevDetails => ({
+                        ...prevDetails,
+                        episodes: response.data // Cập nhật danh sách tập phim
+                    }));
+                } else {
+                    console.error('Unexpected API response:', response.data);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching episodes:', error);
+            });
+    };
+
+
+
     const closeModal = () => {
         setIsModalOpen(false);
         setMovieDetails({
@@ -290,21 +310,22 @@ function MovieAdmin() {
                             <div>
                                 <label className="block font-semibold">Episode Current:</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     value={movieDetails.episode_current}
-                                    onChange={(e) => setMovieDetails({ ...movieDetails, episode_current: parseInt(e.target.value) })}
+                                    onChange={(e) => setMovieDetails({ ...movieDetails, episode_current: e.target.value })}
                                     className="w-full p-2 border border-gray-300 rounded"
                                 />
                             </div>
                             <div>
                                 <label className="block font-semibold">Episode Total:</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     value={movieDetails.episode_total}
-                                    onChange={(e) => setMovieDetails({ ...movieDetails, episode_total: parseInt(e.target.value) })}
+                                    onChange={(e) => setMovieDetails({ ...movieDetails, episode_total: e.target.value })}
                                     className="w-full p-2 border border-gray-300 rounded"
                                 />
                             </div>
+
                             <div>
                                 <label className="block font-semibold">Views:</label>
                                 <input
@@ -403,6 +424,159 @@ function MovieAdmin() {
                         />
 
 
+
+                        <div className="mt-4">
+                            <label className="block font-semibold">Episodes:</label>
+                            {movieDetails.episodes.map((episode, index) => (
+                                <div key={episode.id || index} className="mb-4 p-4 border border-gray-300 rounded bg-gray-50">
+                                    <div className="flex items-center mb-2">
+                                        <label className="w-1/5 font-semibold">Name:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Episode Name"
+                                            value={episode.name || ''}
+                                            onChange={(e) => {
+                                                const updatedEpisodes = [...movieDetails.episodes];
+                                                updatedEpisodes[index] = { ...updatedEpisodes[index], name: e.target.value };
+                                                setMovieDetails({ ...movieDetails, episodes: updatedEpisodes });
+                                            }}
+                                            className="flex-1 p-2 border border-gray-300 rounded"
+                                        />
+                                    </div>
+                                    <div className="flex items-center mb-2">
+                                        <label className="w-1/5 font-semibold">Slug:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Episode Slug"
+                                            value={episode.slug || ''}
+                                            onChange={(e) => {
+                                                const updatedEpisodes = [...movieDetails.episodes];
+                                                updatedEpisodes[index] = { ...updatedEpisodes[index], slug: e.target.value };
+                                                setMovieDetails({ ...movieDetails, episodes: updatedEpisodes });
+                                            }}
+                                            className="flex-1 p-2 border border-gray-300 rounded"
+                                        />
+                                    </div>
+                                    <div className="flex items-center mb-2">
+                                        <label className="w-1/5 font-semibold">Filename:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Filename"
+                                            value={episode.filename || ''}
+                                            onChange={(e) => {
+                                                const updatedEpisodes = [...movieDetails.episodes];
+                                                updatedEpisodes[index] = { ...updatedEpisodes[index], filename: e.target.value };
+                                                setMovieDetails({ ...movieDetails, episodes: updatedEpisodes });
+                                            }}
+                                            className="flex-1 p-2 border border-gray-300 rounded"
+                                        />
+                                    </div>
+                                    <div className="flex items-center mb-2">
+                                        <label className="w-1/5 font-semibold">Link Embed:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Embed Link"
+                                            value={episode.link_embed || ''}
+                                            onChange={(e) => {
+                                                const updatedEpisodes = [...movieDetails.episodes];
+                                                updatedEpisodes[index] = { ...updatedEpisodes[index], link_embed: e.target.value };
+                                                setMovieDetails({ ...movieDetails, episodes: updatedEpisodes });
+                                            }}
+                                            className="flex-1 p-2 border border-gray-300 rounded"
+                                        />
+                                    </div>
+                                    <div className="flex items-center mb-2">
+                                        <label className="w-1/5 font-semibold">Link M3U8:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="M3U8 Link"
+                                            value={episode.link_m3u8 || ''}
+                                            onChange={(e) => {
+                                                const updatedEpisodes = [...movieDetails.episodes];
+                                                updatedEpisodes[index] = { ...updatedEpisodes[index], link_m3u8: e.target.value };
+                                                setMovieDetails({ ...movieDetails, episodes: updatedEpisodes });
+                                            }}
+                                            className="flex-1 p-2 border border-gray-300 rounded"
+                                        />
+                                    </div>
+                                    <div className="flex justify-between mt-4">
+                                        {/* Nút Save Episode */}
+                                        <button
+                                            onClick={() => {
+                                                // Kiểm tra các trường bắt buộc
+                                                if (!episode.name || !episode.slug) {
+                                                    alert('Please fill in all required fields (Name and Slug).');
+                                                    return;
+                                                }
+
+                                                // Gọi API để thêm hoặc sửa tập phim
+                                                axios
+                                                    .post(`http://localhost:8080/films/${movieDetails.id}/episodes`, [episode])
+                                                    .then(() => {
+                                                        fetchEpisodes(); // Gọi lại API để làm mới danh sách tập phim
+                                                        alert('Episode saved successfully!');
+                                                    })
+                                                    .catch((error) => {
+                                                        console.error('Error saving episode:', error);
+                                                        alert('Failed to save episode.');
+                                                    });
+                                            }}
+                                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                                        >
+                                            Save Episode
+                                        </button>
+
+                                        {/* Nút Remove Episode */}
+                                        <button
+                                            onClick={() => {
+                                                if (!episode.id) {
+                                                    alert('This episode does not have an ID. Save it before deleting.');
+                                                    return;
+                                                }
+
+                                                if (window.confirm('Are you sure you want to remove this episode?')) {
+                                                    axios
+                                                        .delete(`http://localhost:8080/films/${movieDetails.id}/episodes/${episode.id}`)
+                                                        .then(() => {
+                                                            fetchEpisodes(); // Gọi lại API để làm mới danh sách tập phim
+                                                            alert('Episode removed successfully!');
+                                                        })
+                                                        .catch((error) => {
+                                                            console.error('Error removing episode:', error);
+                                                            alert('Failed to remove episode.');
+                                                        });
+                                                }
+                                            }}
+                                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                                        >
+                                            Remove Episode
+                                        </button>
+                                    </div>
+
+                                </div>
+                            ))}
+                            {/* Nút Add New Episode */}
+                            <button
+                                onClick={() => {
+                                    const newEpisode = {
+                                        name: '',
+                                        slug: '',
+                                        filename: '',
+                                        link_embed: '',
+                                        link_m3u8: '',
+                                    };
+                                    setMovieDetails({ ...movieDetails, episodes: [...movieDetails.episodes, newEpisode] });
+                                }}
+                                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            >
+                                Add New Episode
+                            </button>
+                        </div>
+
+
+
+
+
                         <h3 className="mt-4 font-bold">Comments:</h3>
                         {movieDetails.comments && movieDetails.comments.length > 0 ? (
                             <ul className="list-disc ml-6">
@@ -435,28 +609,63 @@ function MovieAdmin() {
                         {/* Nút Save */}
                         <button
                             onClick={() => {
-                                // Loại bỏ các tập phim trùng lặp dựa trên id hoặc slug
-                                const uniqueEpisodes = Array.from(
-                                    new Map(
-                                        movieDetails.episodes.map(episode => [episode.slug || episode.id, episode])
-                                    ).values()
-                                );
+                                // Tách các tập phim chưa được lưu (không có ID)
+                                const unsavedEpisodes = movieDetails.episodes.filter(episode => !episode.id);
+                                const savedEpisodes = movieDetails.episodes.filter(episode => episode.id);
 
-                                // Cập nhật lại movieDetails với danh sách tập không trùng lặp
-                                const updatedDetails = { ...movieDetails, episodes: uniqueEpisodes };
+                                // Hàm xử lý lưu các tập chưa được lưu
+                                const saveUnsavedEpisodes = async () => {
+                                    try {
+                                        // Gọi API để lưu các tập chưa có ID
+                                        if (unsavedEpisodes.length > 0) {
+                                            const response = await axios.post(
+                                                `http://localhost:8080/films/${movieDetails.id}/episodes`,
+                                                unsavedEpisodes
+                                            );
+                                            // Thêm các tập mới đã lưu vào danh sách
+                                            const newlySavedEpisodes = response.data;
+                                            return [...savedEpisodes, ...newlySavedEpisodes];
+                                        }
+                                        return savedEpisodes;
+                                    } catch (error) {
+                                        console.error('Error saving unsaved episodes:', error);
+                                        alert('Failed to save unsaved episodes.');
+                                        throw error; // Dừng nếu có lỗi
+                                    }
+                                };
 
-                                // Gọi API để cập nhật
-                                axios.put(`http://localhost:8080/danh-sach/phim/${movieDetails.id}`, updatedDetails)
-                                    .then(() => {
-                                        alert('Movie updated successfully!');
-                                        closeModal();
+                                // Lưu các tập mới và cập nhật phim
+                                saveUnsavedEpisodes()
+                                    .then(allEpisodes => {
+                                        // Loại bỏ các tập phim trùng lặp dựa trên ID hoặc Slug
+                                        const uniqueEpisodes = Array.from(
+                                            new Map(allEpisodes.map(episode => [episode.slug || episode.id, episode])).values()
+                                        );
+
+                                        // Cập nhật lại movieDetails với danh sách tập không trùng lặp
+                                        const updatedDetails = { ...movieDetails, episodes: uniqueEpisodes };
+
+                                        // Gọi API để cập nhật thông tin phim
+                                        return axios.put(
+                                            `http://localhost:8080/danh-sach/phim/${movieDetails.id}`,
+                                            updatedDetails
+                                        );
                                     })
-                                    .catch(error => console.error('Error updating movie:', error));
+                                    .then(() => {
+                                        alert('Movie and episodes updated successfully!');
+                                        closeModal(); // Đóng modal sau khi cập nhật thành công
+                                    })
+                                    .catch(error => {
+                                        console.error('Error updating movie or episodes:', error);
+                                        alert('Failed to update movie or episodes.');
+                                    });
                             }}
                             className="mt-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
                             Save
                         </button>
+
+
 
 
                     </div>
