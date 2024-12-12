@@ -67,7 +67,7 @@ function MovieAdmin() {
 
 
     const fetchEpisodes = () => {
-        axios.get(`http://localhost:8080/films/${movieDetails.id}/episodes`)
+        axios.get(`http://localhost:8080/films/${movieDetails.slug}/episodes`)
             .then(response => {
                 if (response.data && Array.isArray(response.data)) {
                     setMovieDetails(prevDetails => ({
@@ -530,7 +530,10 @@ function MovieAdmin() {
                                         <button
                                             onClick={() => {
                                                 if (!episode.id) {
-                                                    alert('This episode does not have an ID. Save it before deleting.');
+                                                    setMovieDetails(prevDetails => ({
+                                                        ...prevDetails,
+                                                        episodes: prevDetails.episodes.filter(ep => ep !== episode)
+                                                    }));
                                                     return;
                                                 }
 
